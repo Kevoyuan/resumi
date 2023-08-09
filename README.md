@@ -1,0 +1,1 @@
+source gencv/bin/activate
