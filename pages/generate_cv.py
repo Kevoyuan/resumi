@@ -58,18 +58,43 @@ for idx, proj in enumerate(data['Project Experience']):
 
 # ...
 
+# Define a list of common languages and proficiency levels
+all_languages = [
+    'Afrikaans', 'Albanian', 'Arabic', 'Armenian', 'Basque', 'Bengali', 'Bulgarian', 
+    'Catalan', 'Cambodian', 'Chinese (Mandarin)','Chinese (Cantonese)', 'Croatian', 'Czech', 'Danish', 
+    'Dutch', 'English', 'Estonian', 'Fiji', 'Finnish', 'French', 'Georgian', 'German', 
+    'Greek', 'Gujarati', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 
+    'Irish', 'Italian', 'Japanese', 'Javanese', 'Korean', 'Latin', 'Latvian', 'Lithuanian', 
+    'Macedonian', 'Malay', 'Malayalam', 'Maltese', 'Maori', 'Marathi', 'Mongolian', 
+    'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Punjabi', 'Quechua', 
+    'Romanian', 'Russian', 'Samoan', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 
+    'Swahili', 'Swedish', 'Tamil', 'Tatar', 'Telugu', 'Thai', 'Tibetan', 'Tonga', 
+    'Turkish', 'Ukrainian', 'Urdu', 'Uzbek', 'Vietnamese', 'Welsh', 'Xhosa'
+]
+proficiency_levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Native']
+
 # Languages & IT Skills
 st.subheader("Languages & IT Skills")
 for key, value in data['Languages & IT Skills'].items():
     if key == 'Languages':
         # Special handling for "Languages" subsection
-        # modified_key = st.text_input(f"IT Skills", key)
+        modified_key = st.text_input(f"Key for {key}", key)
         cols = st.columns(2)
-        for k, v in value.items():
-            lang_key = cols[0].text_input(f"Languages", k)
-            lang_value = cols[1].text_input(lang_key, v)
-            # Update the data in case of any changes
-            data['Languages & IT Skills']["Languages"][lang_key] = lang_value
+        
+        # Iterate over a copy of the dictionary items
+        for k, v in list(value.items()):
+            # Use k as part of the unique key for the select boxes
+            # Select language from a predefined list
+            selected_language = cols[0].selectbox("Select Language", options=all_languages, index=all_languages.index(k) if k in all_languages else 0, key=f"Language_{k}")
+            # Select proficiency level from a predefined list
+            selected_level = cols[1].selectbox("Select Proficiency", options=proficiency_levels, index=proficiency_levels.index(v) if v in proficiency_levels else 0, key=f"Proficiency_{k}")
+            
+            # Delete the original language key if it's changed
+            if selected_language != k:
+                del data['Languages & IT Skills'][modified_key][k]
+            
+            # Update the data with selected values
+            data['Languages & IT Skills'][modified_key][selected_language] = selected_level
     else:
         cols = st.columns(2)
         # Key on the left column
