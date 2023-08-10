@@ -8,6 +8,9 @@ with open('test.json', 'r') as file:
 # Display data using Streamlit widgets
 st.title("Resume Viewer")
 
+if 'num_added_projects' not in st.session_state:
+    st.session_state.num_added_projects = 0
+
 # Name
 st.text_input("Name", data['Name'], key="Name")
 
@@ -48,10 +51,21 @@ for idx, work in enumerate(data['Work Experience']):
 
 # Project Experience
 st.subheader("Project Experience")
+cols = st.columns(3)
 for idx, proj in enumerate(data['Project Experience']):
-    st.text_input("Duration", proj['Duration'], key=f"Proj_Duration_{idx}")
-    st.text_input("Title", proj['Title'], key=f"Proj_Title_{idx}")
-    st.text_input("Location", proj['Location'], key=f"Proj_Location_{idx}")
+    with cols[1]:
+        st.text_input("Title", proj['Title'], key=f"Proj_Title_{idx}")
+    with cols[0]:
+        st.text_input("Duration", proj['Duration'], key=f"Proj_Duration_{idx}")
+    with cols[2]:
+        st.text_input("Location", proj['Location'], key=f"Proj_Location_{idx}")
+    st.text_input("Institution", proj['Institution'], key=f"Proj_Institution_{idx}")
+    cols = st.columns([10,1])
+    with cols[0]:
+        st.text_input("Topic", proj['Topic'], key=f"Proj_Topic_{idx}")
+    with cols[1]:
+        st.text_input("Grade", proj['Grade'], key=f"Proj_Grade_{idx}")
+
     responsibilities = '; '.join(proj.get('Responsibilities', []))
     modified_responsibilities = st.text_input("Responsibilities", responsibilities, help="Separate each responsibility with a semicolon '';''")
     proj['Responsibilities'] = [resp.strip() for resp in modified_responsibilities.split(';')]
@@ -61,6 +75,56 @@ for idx, proj in enumerate(data['Project Experience']):
     proj['Skills'] = [skill.strip() for skill in modified_skills.split(',')]
     st.divider()
     
+
+## Additional Project Experiences added by the user
+for idx in range(st.session_state.num_added_projects):
+    proj_idx = len(data['Project Experience']) + idx
+    cols = st.columns(3)
+    with cols[1]:
+        title = st.text_input("Title", key=f"Proj_Title_{proj_idx}")
+    with cols[0]:
+        duration = st.text_input("Duration", key=f"Proj_Duration_{proj_idx}")
+    with cols[2]:
+        location = st.text_input("Location", key=f"Proj_Location_{proj_idx}")
+    institution = st.text_input("Institution", key=f"Proj_Institution_{proj_idx}")
+    cols = st.columns([10, 1])
+    with cols[0]:
+        topic = st.text_input("Topic", key=f"Proj_Topic_{proj_idx}")
+    with cols[1]:
+        grade = st.text_input("Grade", key=f"Proj_Grade_{proj_idx}")
+
+    responsibilities = st.text_input("Responsibilities", help="Separate each responsibility with a semicolon '';''", key=f"Proj_Responsibilities_{proj_idx}")
+    skills = st.text_input("Skills", help="Separate each skill with a comma '',''", key=f"Proj_Skills_{proj_idx}")
+
+    new_proj = {
+        'Title': title,
+        'Duration': duration,
+        'Location': location,
+        'Institution': institution,
+        'Topic': topic,
+        'Grade': grade,
+        'Responsibilities': [resp.strip() for resp in responsibilities.split(';')],
+        'Skills': [skill.strip() for skill in skills.split(',')]
+    }
+
+
+        
+    data['Project Experience'].append(new_proj)
+    st.divider()
+
+
+# add button to add additional project experience
+if st.button("Add Project Experience"):
+    st.session_state.num_added_projects += 1
+    
+
+
+
+
+
+
+
+        
 # Define a list of common languages and proficiency levels
 all_languages = [
     'Afrikaans', 'Albanian', 'Arabic', 'Armenian', 'Basque', 'Bengali', 'Bulgarian', 
@@ -94,7 +158,7 @@ for key, value in list(data[modified_main_key].items()):
                 del data[modified_main_key][key][k]
             data[modified_main_key][key][selected_language] = selected_level
     else:
-        cols = st.columns([1,2])
+        cols = st.columns([1,3])
         # Key on the left column
         modified_key = cols[0].text_input(f"IT Skills", key)
         if isinstance(value, list):
