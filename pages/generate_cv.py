@@ -36,10 +36,15 @@ for idx, work in enumerate(data['Work Experience']):
     st.text_input("Role", work['Role'], key=f"Work_Role_{idx}")
     st.text_input("Location", work['Location'], key=f"Work_Location_{idx}")
     st.text_input("Company", work['Company'], key=f"Work_Company_{idx}")
-    for r_idx, resp in enumerate(work.get('Responsibilities', [])):
-        st.text_input("Responsibility", resp, key=f"Work_Resp_{idx}_{r_idx}")
-    for s_idx, skill in enumerate(work.get('Skills', [])):
-        st.text_input("Skill", skill, key=f"Work_Skill_{idx}_{s_idx}")
+    responsibilities = '; '.join(work.get('Responsibilities', []))
+    modified_responsibilities = st.text_input("Responsibilities", responsibilities, help="Separate each responsibility with a semicolon '';''")
+    work['Responsibilities'] = [resp.strip() for resp in modified_responsibilities.split(';')]
+    
+    skills = ', '.join(work.get('Skills', []))
+    modified_skills = st.text_input("Skills", skills, help="Separate each skill with a comma '',''")
+    work['Skills'] = [skill.strip() for skill in modified_skills.split(',')]
+    st.divider()
+
 
 # Project Experience
 st.subheader("Project Experience")
@@ -47,17 +52,15 @@ for idx, proj in enumerate(data['Project Experience']):
     st.text_input("Duration", proj['Duration'], key=f"Proj_Duration_{idx}")
     st.text_input("Title", proj['Title'], key=f"Proj_Title_{idx}")
     st.text_input("Location", proj['Location'], key=f"Proj_Location_{idx}")
-    for a_idx, aff in enumerate(proj.get('Affiliation', [])):
-        st.text_input("Affiliation", aff, key=f"Proj_Aff_{idx}_{a_idx}")
-    st.text_input("Topic", proj.get("Topic", ""), key=f"Proj_Topic_{idx}")
-    st.text_input("Grade", proj.get("Grade", ""), key=f"Proj_Grade_{idx}")
-    for d_idx, detail in enumerate(proj.get('Responsibilities', [])):
-        st.text_input("Detail", detail, key=f"Proj_Detail_{idx}_{d_idx}")
-    for s_idx, skill in enumerate(proj.get('Skills', [])):
-        st.text_input("Skill", skill, key=f"Proj_Skill_{idx}_{s_idx}")
-
-# ...
-
+    responsibilities = '; '.join(proj.get('Responsibilities', []))
+    modified_responsibilities = st.text_input("Responsibilities", responsibilities, help="Separate each responsibility with a semicolon '';''")
+    proj['Responsibilities'] = [resp.strip() for resp in modified_responsibilities.split(';')]
+    
+    skills = ', '.join(proj.get('Skills', []))
+    modified_skills = st.text_input("Skills", skills, help="Separate each skill with a comma '',''")
+    proj['Skills'] = [skill.strip() for skill in modified_skills.split(',')]
+    st.divider()
+    
 # Define a list of common languages and proficiency levels
 all_languages = [
     'Afrikaans', 'Albanian', 'Arabic', 'Armenian', 'Basque', 'Bengali', 'Bulgarian', 
@@ -73,30 +76,25 @@ all_languages = [
 ]
 proficiency_levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Native']
 
+modified_main_key = "Languages & IT Skills"
+if modified_main_key != "Languages & IT Skills":
+    data[modified_main_key] = data.pop("Languages & IT Skills")
+
 # Languages & IT Skills
 st.subheader("Languages & IT Skills")
-for key, value in data['Languages & IT Skills'].items():
-    if key == 'Languages':
-        # Special handling for "Languages" subsection
-        modified_key = st.text_input(f"Key for {key}", key)
+for key, value in list(data[modified_main_key].items()):
+    if key == "Languages":
+        st.divider()
         cols = st.columns(2)
-        
-        # Iterate over a copy of the dictionary items
         for k, v in list(value.items()):
-            # Use k as part of the unique key for the select boxes
-            # Select language from a predefined list
             selected_language = cols[0].selectbox("Select Language", options=all_languages, index=all_languages.index(k) if k in all_languages else 0, key=f"Language_{k}")
-            # Select proficiency level from a predefined list
             selected_level = cols[1].selectbox("Select Proficiency", options=proficiency_levels, index=proficiency_levels.index(v) if v in proficiency_levels else 0, key=f"Proficiency_{k}")
             
-            # Delete the original language key if it's changed
             if selected_language != k:
-                del data['Languages & IT Skills'][modified_key][k]
-            
-            # Update the data with selected values
-            data['Languages & IT Skills'][modified_key][selected_language] = selected_level
+                del data[modified_main_key][key][k]
+            data[modified_main_key][key][selected_language] = selected_level
     else:
-        cols = st.columns(2)
+        cols = st.columns([1,2])
         # Key on the left column
         modified_key = cols[0].text_input(f"IT Skills", key)
         if isinstance(value, list):
@@ -120,8 +118,10 @@ for key, value in data['Languages & IT Skills'].items():
 
 # Hobbies
 st.subheader("Hobbies")
-for idx, hobby in enumerate(data['Hobbies']):
-    st.text_input("Hobby", hobby, key=f"Hobby_{idx}")
+hobbies = ', '.join(data['Hobbies'])
+modified_hobbies = st.text_input("Hobbies", hobbies)
+data['Hobbies'] = [hobby.strip() for hobby in modified_hobbies.split(',')]
+
 
 # Date
 st.text_input("Date", data['Date'], key="Date")
