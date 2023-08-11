@@ -10,14 +10,21 @@ st.title("Resume Viewer")
 
 if 'num_added_projects' not in st.session_state:
     st.session_state.num_added_projects = 0
-
+if 'num_added_works' not in st.session_state:
+    st.session_state.num_added_works = 0
 # Name
 st.text_input("Name", data['Name'], key="Name")
 
 # Contact Details
 st.subheader("Contact Details")
 for key, value in data['Contact'].items():
-    st.text_input(key, value, key=f"Contact_{key}")
+    if key == "Birthdate":
+        st.date_input(key, key=f"Contact_{key}",format="DD.MM.YYYY")
+    elif key == "birthplace":
+        # use select_box to select from a list of countries
+        st.selectbox(key, value, key=f"Contact_{key}")
+    else:
+        st.text_input(key, value, key=f"Contact_{key}")
 
 # Summary
 st.subheader("Summary")
@@ -32,90 +39,160 @@ for idx, edu in enumerate(data['Education']):
     st.text_input("Degree", edu['Degree'], key=f"Edu_Degree_{idx}")
     st.text_input("Focus", edu.get("Focus", ""), key=f"Edu_Focus_{idx}")
 
-# Work Experience
-st.subheader("Work Experience")
-for idx, work in enumerate(data['Work Experience']):
-    st.text_input("Duration", work['Duration'], key=f"Work_Duration_{idx}")
-    st.text_input("Role", work['Role'], key=f"Work_Role_{idx}")
-    st.text_input("Location", work['Location'], key=f"Work_Location_{idx}")
-    st.text_input("Company", work['Company'], key=f"Work_Company_{idx}")
-    responsibilities = '; '.join(work.get('Responsibilities', []))
-    modified_responsibilities = st.text_input("Responsibilities", responsibilities, help="Separate each responsibility with a semicolon '';''")
-    work['Responsibilities'] = [resp.strip() for resp in modified_responsibilities.split(';')]
+# 
+# st.subheader("Work Experience")
+# for idx, work in enumerate(data['Work Experience']):
+#     st.text_input("Duration", work['Duration'], key=f"Work_Duration_{idx}")
+#     st.text_input("Role", work['Role'], key=f"Work_Role_{idx}")
+#     st.text_input("Location", work['Location'], key=f"Work_Location_{idx}")
+#     st.text_input("Company", work['Company'], key=f"Work_Company_{idx}")
+#     responsibilities = '; '.join(work.get('Responsibilities', []))
+#     modified_responsibilities = st.text_input("Responsibilities", responsibilities, help="Separate each responsibility with a semicolon '';''")
+#     work['Responsibilities'] = [resp.strip() for resp in modified_responsibilities.split(';')]
     
-    skills = ', '.join(work.get('Skills', []))
-    modified_skills = st.text_input("Skills", skills, help="Separate each skill with a comma '',''")
-    work['Skills'] = [skill.strip() for skill in modified_skills.split(',')]
-    st.divider()
+#     skills = ', '.join(work.get('Skills', []))
+#     modified_skills = st.text_input("Skills", skills, help="Separate each skill with a comma '',''")
+#     work['Skills'] = [skill.strip() for skill in modified_skills.split(',')]
+#     st.divider()
 
-
-# Project Experience
-st.subheader("Project Experience")
-cols = st.columns(3)
-for idx, proj in enumerate(data['Project Experience']):
-    with cols[1]:
-        st.text_input("Title", proj['Title'], key=f"Proj_Title_{idx}")
+# Work Experience    
+def display_work(work_idx, work=None):
+    cols = st.columns(3)
     with cols[0]:
-        st.text_input("Duration", proj['Duration'], key=f"Proj_Duration_{idx}")
+    
+        duration = st.text_input("Duration", work['Duration'] if work else "", key=f"work_Duration_{work_idx}")
+    with cols[1]:
+        
+        role = st.text_input("Role", work['Role'] if work else "", key=f"work_Role_{work_idx}")
     with cols[2]:
-        st.text_input("Location", proj['Location'], key=f"Proj_Location_{idx}")
-    st.text_input("Institution", proj['Institution'], key=f"Proj_Institution_{idx}")
+    
+        location = st.text_input("Location", work['Location'] if work else "", key=f"work_Location_{work_idx}")
+    company = st.text_input("Company", work['Company'] if work else "", key=f"work_Company_{work_idx}")
+    
+
+    # duration = st.text_input("Duration", work['Duration'], key=f"Work_Duration_{work_idx}")
+    # role = st.text_input("Role", work['Role'], key=f"Work_Role_{work_idx}")
+    # location = st.text_input("Location", work['Location'], key=f"Work_Location_{work_idx}")
+    # company = st.text_input("Company", work['Company'], key=f"Work_Company_{work_idx}")
+    responsibilities = st.text_input("Responsibilities", '; '.join(work.get('Responsibilities', [])) if work else "",
+                                     help="Separate each responsibility with a semicolon '';''", key=f"Work_Responsibilities_{work_idx}")
+    skills = st.text_input("Skills", ', '.join(work.get('Skills', [])) if work else "",
+                           help="Separate each skill with a comma '',''", key=f"Work_Skills_{work_idx}")
+    # st.divider()
+    if not work:  # If it's a new project
+        new_work = {
+            'Role': role,
+            'Duration': duration,
+            'Location': location,
+            'Company': company,
+            'Responsibilities': [resp.strip() for resp in responsibilities.split(';')],
+            'Skills': [skill.strip() for skill in skills.split(',')]
+        }
+        return new_work    
+
+def display_existing_works(data):
+    """Display all existing works from the data dictionary."""
+    for idx, work in enumerate(data['Work Experience']):
+        display_work(idx, work)    
+def display_additional_works(data):
+    """Handle and display additional works added by the user."""
+    for idx in range(st.session_state.num_added_works):
+        work_idx = len(data['Work Experience']) + idx
+        new_work = display_work(work_idx)
+        data['Work Experience'].append(new_work)
+        st.divider()
+def work_experience_section(data):
+    """Main function to manage the "Work Experience" section."""
     cols = st.columns([10,1])
     with cols[0]:
-        st.text_input("Topic", proj['Topic'], key=f"Proj_Topic_{idx}")
+        st.subheader("Work Experience")
     with cols[1]:
-        st.text_input("Grade", proj['Grade'], key=f"Proj_Grade_{idx}")
-
-    responsibilities = '; '.join(proj.get('Responsibilities', []))
-    modified_responsibilities = st.text_input("Responsibilities", responsibilities, help="Separate each responsibility with a semicolon '';''")
-    proj['Responsibilities'] = [resp.strip() for resp in modified_responsibilities.split(';')]
-    
-    skills = ', '.join(proj.get('Skills', []))
-    modified_skills = st.text_input("Skills", skills, help="Separate each skill with a comma '',''")
-    proj['Skills'] = [skill.strip() for skill in modified_skills.split(',')]
+        # Button to add additional work experience
+        if st.button("➕",key="work"):
+            st.session_state.num_added_works += 1
+    # Display existing works
+    display_existing_works(data)
+    # Divider for visual separation
     st.divider()
+    # Display additional works added by the user
+    display_additional_works(data)
     
-
-## Additional Project Experiences added by the user
-for idx in range(st.session_state.num_added_projects):
-    proj_idx = len(data['Project Experience']) + idx
+      
+        
+        
+# Project Experience        
+def display_project(proj_idx, proj=None):
+    """Display fields for a single project and return the project data if new."""
     cols = st.columns(3)
     with cols[1]:
-        title = st.text_input("Title", key=f"Proj_Title_{proj_idx}")
+        title = st.text_input("Title", proj['Title'] if proj else "", key=f"Proj_Title_{proj_idx}")
     with cols[0]:
-        duration = st.text_input("Duration", key=f"Proj_Duration_{proj_idx}")
+        duration = st.text_input("Duration", proj['Duration'] if proj else "", key=f"Proj_Duration_{proj_idx}")
     with cols[2]:
-        location = st.text_input("Location", key=f"Proj_Location_{proj_idx}")
-    institution = st.text_input("Institution", key=f"Proj_Institution_{proj_idx}")
+        location = st.text_input("Location", proj['Location'] if proj else "", key=f"Proj_Location_{proj_idx}")
+    institution = st.text_input("Institution", proj['Institution'] if proj else "", key=f"Proj_Institution_{proj_idx}")
     cols = st.columns([10, 1])
     with cols[0]:
-        topic = st.text_input("Topic", key=f"Proj_Topic_{proj_idx}")
+        topic = st.text_input("Topic", proj['Topic'] if proj else "", key=f"Proj_Topic_{proj_idx}")
     with cols[1]:
-        grade = st.text_input("Grade", key=f"Proj_Grade_{proj_idx}")
+        grade = st.text_input("Grade", proj['Grade'] if proj else "", key=f"Proj_Grade_{proj_idx}")
+    responsibilities = st.text_input("Responsibilities", '; '.join(proj.get('Responsibilities', [])) if proj else "",
+                                     help="Separate each responsibility with a semicolon '';''", key=f"Proj_Responsibilities_{proj_idx}")
+    skills = st.text_input("Skills", ', '.join(proj.get('Skills', [])) if proj else "",
+                           help="Separate each skill with a comma '',''", key=f"Proj_Skills_{proj_idx}")
 
-    responsibilities = st.text_input("Responsibilities", help="Separate each responsibility with a semicolon '';''", key=f"Proj_Responsibilities_{proj_idx}")
-    skills = st.text_input("Skills", help="Separate each skill with a comma '',''", key=f"Proj_Skills_{proj_idx}")
+    if not proj:  # If it's a new project
+        new_proj = {
+            'Title': title,
+            'Duration': duration,
+            'Location': location,
+            'Institution': institution,
+            'Topic': topic,
+            'Grade': grade,
+            'Responsibilities': [resp.strip() for resp in responsibilities.split(';')],
+            'Skills': [skill.strip() for skill in skills.split(',')]
+        }
+        return new_proj
 
-    new_proj = {
-        'Title': title,
-        'Duration': duration,
-        'Location': location,
-        'Institution': institution,
-        'Topic': topic,
-        'Grade': grade,
-        'Responsibilities': [resp.strip() for resp in responsibilities.split(';')],
-        'Skills': [skill.strip() for skill in skills.split(',')]
-    }
+def display_existing_projects(data):
+    """Display all existing projects from the data dictionary."""
+    for idx, proj in enumerate(data['Project Experience']):
+        display_project(idx, proj)
 
-
+def display_additional_projects(data):
+    """Handle and display additional projects added by the user."""
+    for idx in range(st.session_state.num_added_projects):
+        proj_idx = len(data['Project Experience']) + idx
+        new_proj = display_project(proj_idx)
+        data['Project Experience'].append(new_proj)
+        st.divider()
         
-    data['Project Experience'].append(new_proj)
+        
+
+def project_experience_section(data):
+    """Main function to manage the "Project Experience" section."""
+    cols = st.columns([10,1])
+    with cols[0]:
+        st.subheader("Project Experience")
+    with cols[1]:
+        # Button to add additional project experience
+        if st.button("➕",  key="proj"):
+            st.session_state.num_added_projects += 1
+    # Display existing projects
+    display_existing_projects(data)
+    # Divider for visual separation
     st.divider()
+    # Display additional projects added by the user
+    display_additional_projects(data)
 
 
-# add button to add additional project experience
-if st.button("Add Project Experience"):
-    st.session_state.num_added_projects += 1
+
+work_experience_section(data)
+
+# Execute the Project Experience section
+project_experience_section(data)
+
+
     
 
 
@@ -186,6 +263,11 @@ hobbies = ', '.join(data['Hobbies'])
 modified_hobbies = st.text_input("Hobbies", hobbies)
 data['Hobbies'] = [hobby.strip() for hobby in modified_hobbies.split(',')]
 
-
+st.divider()
+cols = st.columns(2)
+# Location
+with cols[0]:
+    st.text_input("Location", data['Location'], key="Location")
 # Date
-st.text_input("Date", data['Date'], key="Date")
+with cols[1]:
+    st.text_input("Date", data['Date'], key="Date")
