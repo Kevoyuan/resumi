@@ -16,6 +16,8 @@ if 'num_added_langs' not in st.session_state:
     st.session_state.num_added_langs = 0
 if 'num_added_educations' not in st.session_state:
     st.session_state.num_added_educations = 0
+if 'num_added_skills' not in st.session_state:
+    st.session_state.num_added_skills = 0
 # Name
 st.text_input("Name", data['Name'], key="Name")
 
@@ -34,31 +36,37 @@ for key, value in data['Contact'].items():
 st.subheader("Summary")
 st.text_area("Summary", data['Summary'], key="Summary")
 
-
 def display_education(edu_idx, education=None):
-    cols = st.columns(5)
+    cols1 = st.columns([2,2.5,1])
+    cols2 = st.columns([1,1.5])
+    duration_key = f"Edu_Duration_{edu_idx}"
+    institution_key = f"Edu_Institution_{edu_idx}"
+    location_key = f"Edu_Location_{edu_idx}"
+    degree_key = f"Edu_Degree_{edu_idx}"
+    focus_key = f"Edu_Focus_{edu_idx}"
+
     duration = education.get('Duration', '') if education else ''
     institution = education.get('Institution', '') if education else ''
     location = education.get('Location', '') if education else ''
     degree = education.get('Degree', '') if education else ''
     focus = education.get('Focus', '') if education else ''
 
-    with cols[0]:
+    with cols1[0]:
         duration = st.text_input(
-            "Duration", duration, key=f"Edu_Duration_{edu_idx}")
-    with cols[1]:
+            "Duration", duration, key=duration_key)
+    with cols1[1]:
         institution = st.text_input(
-            "Institution", institution, key=f"Edu_Institution_{edu_idx}")
-    with cols[2]:
+            "Institution", institution, key=institution_key)
+    with cols1[2]:
         location = st.text_input(
-            "Location", location, key=f"Edu_Location_{edu_idx}")
-    with cols[3]:
+            "Location", location, key=location_key)
+    with cols2[0]:
         degree = st.text_input(
-            "Degree", degree, key=f"Edu_Degree_{edu_idx}")
-    with cols[4]:
+            "Degree", degree, key=degree_key)
+    with cols2[1]:
         focus = st.text_input(
-            "Focus", focus, key=f"Edu_Focus_{edu_idx}")
-
+            "Focus", focus, key=focus_key)
+    st.divider()
     if not education:  # If it's a new education entry
         new_edu = {
             'Duration': duration,
@@ -68,7 +76,6 @@ def display_education(edu_idx, education=None):
             'Focus': focus
         }
         return new_edu
-
     
 def education_section(data):
     cols = st.columns([10, 1])
@@ -120,9 +127,9 @@ def display_work(work_idx, work=None):
     # role = st.text_input("Role", work['Role'], key=f"Work_Role_{work_idx}")
     # location = st.text_input("Location", work['Location'], key=f"Work_Location_{work_idx}")
     # company = st.text_input("Company", work['Company'], key=f"Work_Company_{work_idx}")
-    responsibilities = st.text_input("Responsibilities", '; '.join(work.get('Responsibilities', [])) if work else "",
+    responsibilities = st.text_area("Responsibilities", '; '.join(work.get('Responsibilities', [])) if work else "",
                                      help="Separate each responsibility with a semicolon '';''", key=f"Work_Responsibilities_{work_idx}")
-    skills = st.text_input("Skills", ', '.join(work.get('Skills', [])) if work else "",
+    skills = st.text_area("Skills", ', '.join(work.get('Skills', [])) if work else "",
                            help="Separate each skill with a comma '',''", key=f"Work_Skills_{work_idx}")
     st.divider()
     if not work:  # If it's a new project
@@ -191,9 +198,9 @@ def display_project(proj_idx, proj=None):
     with cols[1]:
         grade = st.text_input(
             "Grade", proj['Grade'] if proj else "", key=f"Proj_Grade_{proj_idx}")
-    responsibilities = st.text_input("Responsibilities", '; '.join(proj.get('Responsibilities', [])) if proj else "",
+    responsibilities = st.text_area("Responsibilities", '; '.join(proj.get('Responsibilities', [])) if proj else "",
                                      help="Separate each responsibility with a semicolon '';''", key=f"Proj_Responsibilities_{proj_idx}")
-    skills = st.text_input("Skills", ', '.join(proj.get('Skills', [])) if proj else "",
+    skills = st.text_area("Skills", ', '.join(proj.get('Skills', [])) if proj else "",
                            help="Separate each skill with a comma '',''", key=f"Proj_Skills_{proj_idx}")
 
     if not proj:  # If it's a new project
@@ -273,6 +280,7 @@ if modified_main_key != "Languages & IT Skills":
     data[modified_main_key] = data.pop("Languages & IT Skills")
 
 # Languages & IT Skills
+
 def display_language(language_idx, language=None):
     cols = st.columns(2)
     with cols[0]:
@@ -287,6 +295,18 @@ def display_language(language_idx, language=None):
             selected_language: selected_level
         }
         return new_language
+
+def display_it_skill(skill_idx, skill=None):
+    cols = st.columns([1, 3])
+    with cols[0]:
+        skill_key = st.text_input("IT Skills", skill if skill else "", key=f"Skill_Key_{skill_idx}")
+    with cols[1]:
+        skill_value = st.text_input("-", ', '.join(skill[skill_key]) if skill and skill_key in skill else "", key=f"Skill_Value_{skill_idx}")
+    # st.divider()
+    if not skill:
+        new_skill = {skill_key: [value.strip() for value in skill_value.split(',')]}
+        return new_skill
+
 def modify_languages_and_skills(data, all_languages, proficiency_levels):
     modified_main_key = "Languages & IT Skills"
 
@@ -294,8 +314,19 @@ def modify_languages_and_skills(data, all_languages, proficiency_levels):
         data[modified_main_key] = data.pop("Languages & IT Skills")
 
     # Languages & IT Skills
-    st.subheader("IT Skills")
+    cols = st.columns([10, 1])
+    with cols[0]:
+    
+        st.subheader("IT Skills")
+        
+    with cols[1]:
+        if st.button("➕", key="it_skill"):
+            st.session_state.num_added_skills += 1
+    for idx in range(st.session_state.num_added_skills):
+        display_it_skill(idx)
+        
     for key, value in list(data[modified_main_key].items()):
+
         if key == "Languages":
             st.divider()
             cols = st.columns([10, 1])
@@ -304,46 +335,50 @@ def modify_languages_and_skills(data, all_languages, proficiency_levels):
             with cols[1]:
                 if st.button("➕",  key="lang"):
                     st.session_state.num_added_langs += 1
+
             cols = st.columns(2)
-            
-            for lang_idx in range(st.session_state.num_added_langs):
-                new_language = display_language(lang_idx)
-                data[modified_main_key][key].update(new_language)
             for k, v in list(value.items()):
                 selected_language = cols[0].selectbox("Select Language", options=all_languages, index=all_languages.index(
                     k) if k in all_languages else 0, key=f"Language_{k}")
                 selected_level = cols[1].selectbox("Select Proficiency", options=proficiency_levels, index=proficiency_levels.index(
                     v) if v in proficiency_levels else 0, key=f"Proficiency_{k}")
-
                 if selected_language != k:
                     del data[modified_main_key][key][k]
                 data[modified_main_key][key][selected_language] = selected_level
+            for lang_idx in range(st.session_state.num_added_langs):
+                new_language = display_language(lang_idx)
+                data[modified_main_key][key].update(new_language)
         else:
             cols = st.columns([1, 3])
             # Key on the left column
             modified_key = cols[0].text_input("IT Skills", key)
+            
             if isinstance(value, list):
                 # Values on the right column
                 modified_value = cols[1].text_input(
-                    modified_key, ', '.join(value))
+                    '-', ', '.join(value))
                 # Update the data in case of any changes
                 data['Languages & IT Skills'][modified_key] = modified_value.split(
                     ', ')
             elif isinstance(value, dict):
-                for k, v in value.items():
-                    # Sub-key on the left column
-                    modified_sub_key = cols[0].text_input(
-                        f"Sub-key for {k}", k)
-                    # Values on the right column
-                    modified_sub_value = cols[1].text_input(
-                        modified_sub_key, v)
-                    # Update the data in case of any changes
-                    data['Languages & IT Skills'][modified_key][modified_sub_key] = modified_sub_value
+         
+                # for k, v in value.items():
+                #     # Sub-key on the left column
+                #     modified_sub_key = cols[0].text_input(
+                #         f"Sub-key for {k}", k)
+                #     # Values on the right column
+                #     modified_sub_value = cols[1].text_input(
+                #         '-', v)
+                #     # Update the data in case of any changes
+                #     data['Languages & IT Skills'][modified_key][modified_sub_key] = modified_sub_value
+                # Display additional IT skills added by the user
+                for skill_idx in range(st.session_state.num_added_skills):
+                    new_skill = display_it_skill(skill_idx)
+                    data['Languages & IT Skills'][modified_key].update(new_skill)
 
 
 with st.expander("Languages & IT Skills", expanded=True):
     modify_languages_and_skills(data, all_languages, proficiency_levels)
-
 
 # Hobbies
 st.subheader("Hobbies")
