@@ -1,6 +1,7 @@
 import streamlit as st
 import json
-
+import datetime
+from datetime import date
 # Load the JSON data
 with open('test.json', 'r') as file:
     data = json.load(file)
@@ -22,16 +23,26 @@ if 'num_added_skills' not in st.session_state:
 st.text_input("Name", data['Name'], key="Name")
 
 # Contact Details
-st.subheader("Contact Details")
-for key, value in data['Contact'].items():
-    if key == "Birthdate":
-        st.date_input(key, key=f"Contact_{key}", format="DD.MM.YYYY")
-    elif key == "birthplace":
-        # use select_box to select from a list of countries
-        st.selectbox(key, value, key=f"Contact_{key}")
-    else:
-        st.text_input(key, value, key=f"Contact_{key}")
-
+def create_contact_details(data):
+    st.subheader("Contact Details")
+    for key, value in data['Contact'].items():
+        if key == "Birthdate":
+            # Convert the Birthdate string from the JSON to a datetime.date object
+            birthdate_date_object = datetime.datetime.strptime(value, "%d.%m.%Y").date()
+            
+            # Use the date object to initialize the st.date_input widget
+            selected_date = st.date_input(key, value=birthdate_date_object, format="DD.MM.YYYY", key=f"Contact_{key}")
+            
+            # Convert the selected date back to the string format and update the data
+            data['Contact'][key] = selected_date.strftime('%d.%m.%Y')
+        elif key == "birthplace":
+            # use select_box to select from a list of countries
+            st.selectbox(key, value, key=f"Contact_{key}")
+        else:
+            st.text_input(key, value, key=f"Contact_{key}")
+            
+with st.expander("Contact Details", expanded=False):
+    create_contact_details(data)
 # Summary
 st.subheader("Summary")
 st.text_area("Summary", data['Summary'], key="Summary")
@@ -99,7 +110,7 @@ def education_section(data):
         data['Education'].append(new_edu)
         # st.divider()
     
-with st.expander("Education", expanded=True):
+with st.expander("Education", expanded=False):
     education_section(data)
 
 
@@ -249,12 +260,12 @@ def project_experience_section(data):
     display_additional_projects(data)
 
 
-with st.expander("Work Experience", expanded=True):
+with st.expander("Work Experience", expanded=False):
 
     work_experience_section(data)
 
 
-with st.expander("Project Experience", expanded=True):
+with st.expander("Project Experience", expanded=False):
 
     # Execute the Project Experience section
     project_experience_section(data)
@@ -359,15 +370,19 @@ def modify_languages_and_skills_optimized(data, all_languages, proficiency_level
     modify_it_skills(data)
     modify_languages(data, all_languages, proficiency_levels)
 
-with st.expander("Languages & IT Skills", expanded=True):
+with st.expander("Languages & IT Skills", expanded=False):
     modify_languages_and_skills_optimized(data, all_languages, proficiency_levels)
     
     
 # Hobbies
-st.subheader("Hobbies")
-hobbies = ', '.join(data['Hobbies'])
-modified_hobbies = st.text_input("-", hobbies)
-data['Hobbies'] = [hobby.strip() for hobby in modified_hobbies.split(',')]
+def display_hobbies(data):
+    st.subheader("Hobbies")
+    hobbies = ', '.join(data['Hobbies'])
+    modified_hobbies = st.text_input("-", hobbies)
+    data['Hobbies'] = [hobby.strip() for hobby in modified_hobbies.split(',')]
+
+with st.expander("Hobbies", expanded=False):
+    display_hobbies(data)
 
 st.divider()
 cols = st.columns(2)
@@ -376,4 +391,4 @@ with cols[0]:
     st.text_input("Location", data['Location'], key="Location")
 # Date
 with cols[1]:
-    st.text_input("Date", data['Date'], key="Date")
+    st.date_input("Date", value=date.today(), format="DD.MM.YYYY", key="Date")
