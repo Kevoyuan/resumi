@@ -307,80 +307,62 @@ def display_it_skill(skill_idx, skill=None):
         new_skill = {skill_key: [value.strip() for value in skill_value.split(',')]}
         return new_skill
 
-def modify_languages_and_skills(data, all_languages, proficiency_levels):
-    modified_main_key = "Languages & IT Skills"
 
-    if modified_main_key != "Languages & IT Skills":
-        data[modified_main_key] = data.pop("Languages & IT Skills")
-
-    # Languages & IT Skills
+def modify_languages(data, all_languages, proficiency_levels):
+    """Handle the languages modification."""
+    st.divider()
     cols = st.columns([10, 1])
     with cols[0]:
-    
-        st.subheader("IT Skills")
+        st.subheader("Languages")
+    with cols[1]:
+        if st.button("➕", key="lang"):
+            st.session_state.num_added_langs += 1
+          
+    cols = st.columns(2)
+    for k, v in list(data["Languages & IT Skills"]["Languages"].items()):
+        selected_language = cols[0].selectbox("Select Language", options=all_languages, 
+                                              index=all_languages.index(k) if k in all_languages else 0, 
+                                              key=f"Language_{k}")
+        selected_level = cols[1].selectbox("Select Proficiency", options=proficiency_levels, 
+                                           index=proficiency_levels.index(v) if v in proficiency_levels else 0, 
+                                           key=f"Proficiency_{k}")
+        if selected_language != k:
+            del data["Languages & IT Skills"]["Languages"][k]
+        data["Languages & IT Skills"]["Languages"][selected_language] = selected_level
         
+    for lang_idx in range(st.session_state.num_added_langs):
+        new_language = display_language(lang_idx)
+        data["Languages & IT Skills"]["Languages"].update(new_language)
+
+
+def modify_it_skills(data):
+    """Handle the IT skills modification."""
+    cols = st.columns([10, 1])
+    with cols[0]:
+        st.subheader("IT Skills")
     with cols[1]:
         if st.button("➕", key="it_skill"):
             st.session_state.num_added_skills += 1
-    for idx in range(st.session_state.num_added_skills):
-        display_it_skill(idx)
-        
-    for key, value in list(data[modified_main_key].items()):
-
-        if key == "Languages":
-            st.divider()
-            cols = st.columns([10, 1])
-            with cols[0]:
-                st.subheader("Languages")
-            with cols[1]:
-                if st.button("➕",  key="lang"):
-                    st.session_state.num_added_langs += 1
-
-            cols = st.columns(2)
-            for k, v in list(value.items()):
-                selected_language = cols[0].selectbox("Select Language", options=all_languages, index=all_languages.index(
-                    k) if k in all_languages else 0, key=f"Language_{k}")
-                selected_level = cols[1].selectbox("Select Proficiency", options=proficiency_levels, index=proficiency_levels.index(
-                    v) if v in proficiency_levels else 0, key=f"Proficiency_{k}")
-                if selected_language != k:
-                    del data[modified_main_key][key][k]
-                data[modified_main_key][key][selected_language] = selected_level
-            for lang_idx in range(st.session_state.num_added_langs):
-                new_language = display_language(lang_idx)
-                data[modified_main_key][key].update(new_language)
-        else:
+          
+    for key, value in list(data["Languages & IT Skills"].items()):
+        if key != "Languages":
             cols = st.columns([1, 3])
-            # Key on the left column
             modified_key = cols[0].text_input("IT Skills", key)
-            
             if isinstance(value, list):
-                # Values on the right column
-                modified_value = cols[1].text_input(
-                    '-', ', '.join(value))
-                # Update the data in case of any changes
-                data['Languages & IT Skills'][modified_key] = modified_value.split(
-                    ', ')
-                
-            elif isinstance(value, dict):
-         
-                # for k, v in value.items():
-                #     # Sub-key on the left column
-                #     modified_sub_key = cols[0].text_input(
-                #         f"Sub-key for {k}", k)
-                #     # Values on the right column
-                #     modified_sub_value = cols[1].text_input(
-                #         '-', v)
-                #     # Update the data in case of any changes
-                #     data['Languages & IT Skills'][modified_key][modified_sub_key] = modified_sub_value
-                # Display additional IT skills added by the user
-                for skill_idx in range(st.session_state.num_added_skills):
-                    new_skill = display_it_skill(skill_idx)
-                    data['Languages & IT Skills'][modified_key].update(new_skill)
+                modified_value = cols[1].text_input('-', ', '.join(value))
+                data['Languages & IT Skills'][modified_key] = modified_value.split(', ')
+    for idx in range(st.session_state.num_added_skills):
+                        display_it_skill(idx)
 
+def modify_languages_and_skills_optimized(data, all_languages, proficiency_levels):
+    """Optimized modify_languages_and_skills function."""
+    modify_it_skills(data)
+    modify_languages(data, all_languages, proficiency_levels)
 
 with st.expander("Languages & IT Skills", expanded=True):
-    modify_languages_and_skills(data, all_languages, proficiency_levels)
-
+    modify_languages_and_skills_optimized(data, all_languages, proficiency_levels)
+    
+    
 # Hobbies
 st.subheader("Hobbies")
 hobbies = ', '.join(data['Hobbies'])
