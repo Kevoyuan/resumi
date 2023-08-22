@@ -3,7 +3,7 @@ import json
 import datetime
 from datetime import date
 # Load the JSON data
-with open('test.json', 'r') as file:
+with open('resume_properties.json', 'r') as file:
     data = json.load(file)
 
 # Display data using Streamlit widgets
