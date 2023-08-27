@@ -80,13 +80,23 @@ def display_education(edu_idx, education=None):
     focus = education.get('Focus', '') if education else ''
 
     with cols1[0]:
+        # check if the duration is empty, if empty, use today's date, format is DD.MM.YYYY-DD.MM.YYYY
+        if duration == '':
+            start_date = date.today().strftime('%d.%m.%Y')
+            end_date = date.today().strftime('%d.%m.%Y')
+            duration = start_date + '-' + end_date   
         # the start date is the first part of the duration string, eg:my input is 04/2020 – 03/2023, auto fill the start date is 01/04/2020
         start_date = duration.split('-')[0].strip()
-        start_date = f"01/{start_date}"
-        start_date = datetime.strptime(str(start_date), "%d/%m/%Y").date()
+        # check if the start date has day, if not, add 01 to the start date
+        if len(start_date) == 7:
+            start_date = f"01.{start_date}"
+
+        start_date = datetime.strptime(str(start_date), "%d.%m.%Y").date()
         end_date = duration.split('-')[1].strip()
-        end_date = f"01/{end_date}"
-        end_date = datetime.strptime(end_date, "%d/%m/%Y").date()
+        if len(end_date) == 7:   
+            end_date = f"01.{end_date}"
+      
+        end_date = datetime.strptime(end_date, "%d.%m.%Y").date()
         duration = st.date_input("Duration", (start_date,end_date), format="DD.MM.YYYY", key=duration_key)
 
     with cols1[1]:
@@ -127,9 +137,9 @@ def education_section(data):
 
     # Divider for visual separation
     # st.divider()
-
+    offset = len(data['Education'])
     # Display additional education entries added by the user
-    for edu_idx in range(st.session_state.num_added_educations):
+    for edu_idx in range(offset, offset + st.session_state.num_added_educations):
         new_edu = display_education(edu_idx)
         data['Education'].append(new_edu)
         # st.divider()
