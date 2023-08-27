@@ -1,7 +1,10 @@
 import streamlit as st
 import json
-import datetime
+
 from datetime import date
+import canvas
+from datetime import datetime
+
 # Load the JSON data
 with open('resume_properties.json', 'r') as file:
     data = json.load(file)
@@ -19,8 +22,22 @@ if 'num_added_educations' not in st.session_state:
     st.session_state.num_added_educations = 0
 if 'num_added_skills' not in st.session_state:
     st.session_state.num_added_skills = 0
+    
+cols = st.columns([2,1,2])
 # Name
-st.text_input("Name", data['Name'], key="Name")
+with cols[0]:
+    Firstname = data['Name'].split(' ')[0]
+    Lastname = data['Name'].split(' ')[1]
+    st.text_input("First Name", Firstname, key="FirstName")
+    st.text_input("Last Name", Lastname, key="LastName")
+
+# Photo
+with st.sidebar:
+    #uplodad photo
+    uploaded_file = st.file_uploader("Upload a photo", type=["jpg", "png"])
+    if uploaded_file:
+        with cols[2]:
+            st.image(uploaded_file, width=150)
 
 # Contact Details
 def create_contact_details(data):
@@ -28,7 +45,7 @@ def create_contact_details(data):
     for key, value in data['Contact'].items():
         if key == "Birthdate":
             # Convert the Birthdate string from the JSON to a datetime.date object
-            birthdate_date_object = datetime.datetime.strptime(value, "%d.%m.%Y").date()
+            birthdate_date_object = datetime.strptime(value, "%d.%m.%Y").date()
             
             # Use the date object to initialize the st.date_input widget
             selected_date = st.date_input(key, value=birthdate_date_object, format="DD.MM.YYYY", key=f"Contact_{key}")
@@ -63,8 +80,15 @@ def display_education(edu_idx, education=None):
     focus = education.get('Focus', '') if education else ''
 
     with cols1[0]:
-        duration = st.text_input(
-            "Duration", duration, key=duration_key)
+        # the start date is the first part of the duration string, eg:my input is 04/2020 – 03/2023, auto fill the start date is 01/04/2020
+        start_date = duration.split('-')[0].strip()
+        start_date = f"01/{start_date}"
+        start_date = datetime.strptime(str(start_date), "%d/%m/%Y").date()
+        end_date = duration.split('-')[1].strip()
+        end_date = f"01/{end_date}"
+        end_date = datetime.strptime(end_date, "%d/%m/%Y").date()
+        duration = st.date_input("Duration", (start_date,end_date), format="DD.MM.YYYY", key=duration_key)
+
     with cols1[1]:
         institution = st.text_input(
             "Institution", institution, key=institution_key)
@@ -134,10 +158,6 @@ def display_work(work_idx, work=None):
     company = st.text_input(
         "Company", work['Company'] if work else "", key=f"work_Company_{work_idx}")
 
-    # duration = st.text_input("Duration", work['Duration'], key=f"Work_Duration_{work_idx}")
-    # role = st.text_input("Role", work['Role'], key=f"Work_Role_{work_idx}")
-    # location = st.text_input("Location", work['Location'], key=f"Work_Location_{work_idx}")
-    # company = st.text_input("Company", work['Company'], key=f"Work_Company_{work_idx}")
     responsibilities = st.text_area("Responsibilities", '; '.join(work.get('Responsibilities', [])) if work else "",
                                      help="Separate each responsibility with a semicolon '';''", key=f"Work_Responsibilities_{work_idx}")
     skills = st.text_area("Skills", ', '.join(work.get('Skills', [])) if work else "",
@@ -392,3 +412,4 @@ with cols[0]:
 # Date
 with cols[1]:
     st.date_input("Date", value=date.today(), format="DD.MM.YYYY", key="Date")
+canvas.signiture()
