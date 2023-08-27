@@ -8,3 +8,5 @@ resume_properties.json
 test.py
 .streamlit/secrets.toml
 .streamlit/secrets.toml
+__pycache__/canvas.cpython-310.pyc
+signiture.png
