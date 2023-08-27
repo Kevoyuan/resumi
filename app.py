@@ -18,7 +18,7 @@ openai_api_key = st.secrets['OPENAI_API_KEY']
 def extract_properties_from_resume(resume_text,openai_api_key=openai_api_key):
     # Modified prompt for the OpenAI API
     prompt = '''
-    Extract resume properties and structure in JSON:
+    Extract resume properties and structure in JSON. For any duration, use format="DD.MM.YYYY",if no day include, save DD=01, eg: 04/2020 = 01.04.2020):
     {
         "Name": "",
         "Contact": {"Email": "", "GitHub": "", "Birthdate": "", "Birthplace": "", "LinkedIn": "", "Address": "", "Phone": ""},
@@ -26,14 +26,19 @@ def extract_properties_from_resume(resume_text,openai_api_key=openai_api_key):
         "Education": [{"Duration": "", "Institution": "", "Location": "", "Degree": "", "Focus": ""}],
         "Work Experience": [{"Duration": "", "Role": "", "Location": "", "Company": "", "Responsibilities": [""], "Skills": [""]}],
         "Project Experience": [{"Duration": "", "Title": "", "Location": "", "Institution": "", "Topic": "", "Grade": "", "Responsibilities": [""], "Skills": [""]}],
-        "Languages & IT Skills": {
-            "Programming": [""], "CAD": [""], "FEM": [""], "Machine Learning": [""], "Deep Learning": [""], "Tools": [""],
-            "Languages": {"Language Name": "Proficiency"}
+        "Languages & IT Skills": Capture any IT skill category eg: technical skills, program languagues (as keys) with its respective skills (as sub-keys). For "Languages": {
+            "Language": "Proficiency_Level"
         },
         "Hobbies": [""],
         "Location": "",
         "Date": ""
     }
+    For mapping the user's language proficiency to the preset levels:
+    Mother language can be mapped to Native.
+    Terms like fluent can be mapped to C1 or C2 depending on the depth of fluency.
+    Basic knowledge can be mapped to A1 or A2.
+    Intermediate proficiency can be mapped to B1 or B2.
+
     '''
 
     if not openai_api_key:
@@ -51,14 +56,15 @@ def extract_properties_from_resume(resume_text,openai_api_key=openai_api_key):
     # Extracted properties
     properties = response.choices[0].text.strip()
     # Convert the properties to a dictionary
+    properties_dict = json.loads(properties)
   
-    try:
-        properties_dict = json.loads(properties)
-    except json.JSONDecodeError:
-        st.error("The model's response couldn't be parsed as JSON. Please check the response format.")
+    # try:
+    #     properties_dict = json.loads(properties)
+    # except json.JSONDecodeError:
+    #     st.error("The model's response couldn't be parsed as JSON. Please check the response format.")
     
 
-    # st.write(f"Raw Response: {properties}")
+    st.write(f"Raw Response: {properties}")
     return properties_dict
 
 
