@@ -9,6 +9,8 @@ from datetime import datetime
 with open('resume_properties.json', 'r') as file:
     data = json.load(file)
 
+openai_api_key = st.secrets['OPENAI_API_KEY']
+
 # Display data using Streamlit widgets
 st.title("Resume Viewer")
 
@@ -40,9 +42,26 @@ with st.sidebar:
             st.image(uploaded_file, width=150)
             st.caption("Photo")
 
+def suggest_modification(text, openai_api_key=openai_api_key):
+    prompt = '''
+    give suggestions for the following resume for each section:
+    '''
+    if not openai_api_key:
+        st.info("Please add your OpenAI API key to continue.")
+        st.stop()
+        
+    openai.api_key = openai_api_key
+    
+    # Use the OpenAI API to process the resume
+    response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=f"{prompt}\n\n{resume_text}",
+        max_tokens=2000,
+    )
+    
+    
+
 # Contact Details
-
-
 def create_contact_details(data):
     st.subheader("Contact Details")
     for key, value in data['Contact'].items():
