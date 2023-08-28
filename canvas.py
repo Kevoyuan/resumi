@@ -10,7 +10,8 @@ def signiture():
     st.write("Signiture")
     # Create a canvas component
     canvas_result = st_canvas(
-        fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
+        # white
+        fill_color= '#FFFFFF', 
         stroke_width=2,
         stroke_color='black',
         background_color="#eee",
