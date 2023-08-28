@@ -245,14 +245,14 @@ def work_experience_section(data):
 # Project Experience
 def display_project(proj_idx, proj=None):
     """Display fields for a single project and return the project data if new."""
-    title = project.get('Title', '') if project else ''
-    duration = project.get('Duration', '') if project else ''
-    location = project.get('Location', '') if project else ''
-    institution = project.get('Institution', '') if project else ''
-    topic = project.get('Topic', '') if project else ''
-    grade = project.get('Grade', '') if project else ''
-    responsibilities = project.get('Responsibilities', []) if project else []
-    skills = project.get('Skills', []) if project else []
+    title = proj.get('Title', '') if proj else ''
+    duration = proj.get('Duration', '') if proj else ''
+    location = proj.get('Location', '') if proj else ''
+    institution = proj.get('Institution', '') if proj else ''
+    topic = proj.get('Topic', '') if proj else ''
+    grade = proj.get('Grade', '') if proj else ''
+    responsibilities = proj.get('Responsibilities', []) if proj else []
+    skills = proj.get('Skills', []) if proj else []
     
     proj_title_key = f"Proj_Title_{proj_idx}"
     proj_duration_key = f"Proj_Duration_{proj_idx}"
