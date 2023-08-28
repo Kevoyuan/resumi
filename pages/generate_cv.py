@@ -69,6 +69,25 @@ with st.expander("Contact Details", expanded=False):
 st.subheader("Summary")
 st.text_area("Summary", data['Summary'], key="Summary")
 
+def duration_to_date(duration,duration_key_name):
+    if duration == '':
+        start_date = date.today().strftime('%d.%m.%Y')
+        end_date = date.today().strftime('%d.%m.%Y')
+        duration = start_date + '-' + end_date
+    # the start date is the first part of the duration string, eg:my input is 04/2020 – 03/2023, auto fill the start date is 01/04/2020
+    start_date = duration.split('-')[0].strip()
+    # check if the start date has day, if not, add 01 to the start date
+    if len(start_date) == 7:
+        start_date = f"01.{start_date}"
+
+    start_date = datetime.strptime(str(start_date), "%d.%m.%Y").date()
+    end_date = duration.split('-')[1].strip()
+    if len(end_date) == 7:
+        end_date = f"01.{end_date}"
+
+    end_date = datetime.strptime(end_date, "%d.%m.%Y").date()
+    duration = st.date_input(
+        "Duration", (start_date, end_date), format="DD.MM.YYYY", key=duration_key_name)
 
 def display_education(edu_idx, education=None):
     cols1 = st.columns([2, 2.5, 1])
@@ -86,26 +105,7 @@ def display_education(edu_idx, education=None):
     focus = education.get('Focus', '') if education else ''
 
     with cols1[0]:
-        # check if the duration is empty, if empty, use today's date, format is DD.MM.YYYY-DD.MM.YYYY
-        if duration == '':
-            start_date = date.today().strftime('%d.%m.%Y')
-            end_date = date.today().strftime('%d.%m.%Y')
-            duration = start_date + '-' + end_date
-        # the start date is the first part of the duration string, eg:my input is 04/2020 – 03/2023, auto fill the start date is 01/04/2020
-        start_date = duration.split('-')[0].strip()
-        # check if the start date has day, if not, add 01 to the start date
-        if len(start_date) == 7:
-            start_date = f"01.{start_date}"
-
-        start_date = datetime.strptime(str(start_date), "%d.%m.%Y").date()
-        end_date = duration.split('-')[1].strip()
-        if len(end_date) == 7:
-            end_date = f"01.{end_date}"
-
-        end_date = datetime.strptime(end_date, "%d.%m.%Y").date()
-        duration = st.date_input(
-            "Duration", (start_date, end_date), format="DD.MM.YYYY", key=duration_key)
-
+        duration_to_date(duration,duration_key)
     with cols1[1]:
         institution = st.text_input(
             "Institution", institution, key=institution_key)
@@ -171,20 +171,27 @@ def display_work(work_idx, work=None):
     work_Responsibilities_key = f"Work_Responsibilities_{work_idx}"
     work_Skills_key = f"Work_Skills_{work_idx}"
 
-    with cols[0]:
 
-        duration = st.text_input(
-            "Duration", work['Duration'] if work else "", key=work_duration_key)
+    duration = work.get('Duration', '') if work else ''
+    role = work.get('Role', '') if work else ''
+    location = work.get('Location', '') if work else ''
+    company = work.get('Company', '') if work else ''
+    responsibilities = work.get('Responsibilities', []) if work else []
+    skills = work.get('Skills', []) if work else []
+    
+
+    with cols[0]:
+        duration_to_date(duration,work_duration_key)
+ 
     with cols[1]:
 
-        role = st.text_input(
-            "Role", work['Role'] if work else "", key=work_Role_key)
+        role = st.text_input("Role", role, key=work_Role_key)
     with cols[2]:
 
         location = st.text_input(
-            "Location", work['Location'] if work else "", key=work_Location_key)
-    company = st.text_input(
-        "Company", work['Company'] if work else "", key=work_Company_key)
+            "Location", location, key=work_Location_key)
+    company = st.text_input(    
+        "Company", company, key=work_Company_key)
 
     responsibilities = st.text_area("Responsibilities", '; '.join(work.get('Responsibilities', [])) if work else "",
                                     help="Separate each responsibility with a semicolon '';''", key=work_Responsibilities_key)
@@ -238,29 +245,47 @@ def work_experience_section(data):
 # Project Experience
 def display_project(proj_idx, proj=None):
     """Display fields for a single project and return the project data if new."""
+    title = project.get('Title', '') if project else ''
+    duration = project.get('Duration', '') if project else ''
+    location = project.get('Location', '') if project else ''
+    institution = project.get('Institution', '') if project else ''
+    topic = project.get('Topic', '') if project else ''
+    grade = project.get('Grade', '') if project else ''
+    responsibilities = project.get('Responsibilities', []) if project else []
+    skills = project.get('Skills', []) if project else []
+    
+    proj_title_key = f"Proj_Title_{proj_idx}"
+    proj_duration_key = f"Proj_Duration_{proj_idx}"
+    proj_Location_key = f"Proj_Location_{proj_idx}"
+    proj_Institution_key = f"Proj_Institution_{proj_idx}"
+    proj_Topic_key = f"Proj_Topic_{proj_idx}"
+    proj_Grade_key = f"Proj_Grade_{proj_idx}"
+    proj_Responsibilities_key = f"Proj_Responsibilities_{proj_idx}"
+    proj_Skills_key = f"Proj_Skills_{proj_idx}"
+    
     cols = st.columns(3)
     with cols[1]:
         title = st.text_input(
-            "Title", proj['Title'] if proj else "", key=f"Proj_Title_{proj_idx}")
+            "Title", title, key=proj_title_key)
     with cols[0]:
-        duration = st.text_input(
-            "Duration", proj['Duration'] if proj else "", key=f"Proj_Duration_{proj_idx}")
+        duration_to_date(duration,proj_duration_key)
+     
     with cols[2]:
         location = st.text_input(
-            "Location", proj['Location'] if proj else "", key=f"Proj_Location_{proj_idx}")
+            "Location", location, key=proj_Location_key)
     institution = st.text_input(
-        "Institution", proj['Institution'] if proj else "", key=f"Proj_Institution_{proj_idx}")
+        "Institution", institution, key=proj_Institution_key)
     cols = st.columns([10, 1])
     with cols[0]:
         topic = st.text_input(
-            "Topic", proj['Topic'] if proj else "", key=f"Proj_Topic_{proj_idx}")
+            "Topic", topic, key=proj_Topic_key)
     with cols[1]:
         grade = st.text_input(
-            "Grade", proj['Grade'] if proj else "", key=f"Proj_Grade_{proj_idx}")
+            "Grade", grade, key=proj_Grade_key)
     responsibilities = st.text_area("Responsibilities", '; '.join(proj.get('Responsibilities', [])) if proj else "",
-                                    help="Separate each responsibility with a semicolon '';''", key=f"Proj_Responsibilities_{proj_idx}")
+                                    help="Separate each responsibility with a semicolon '';''", key=proj_Responsibilities_key)
     skills = st.text_area("Skills", ', '.join(proj.get('Skills', [])) if proj else "",
-                          help="Separate each skill with a comma '',''", key=f"Proj_Skills_{proj_idx}")
+                          help="Separate each skill with a comma '',''", key=proj_Skills_key)
 
     if not proj:  # If it's a new project
         new_proj = {
