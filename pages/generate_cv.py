@@ -22,8 +22,8 @@ if 'num_added_educations' not in st.session_state:
     st.session_state.num_added_educations = 0
 if 'num_added_skills' not in st.session_state:
     st.session_state.num_added_skills = 0
-    
-cols = st.columns([2,1,2])
+
+cols = st.columns([2, 1, 2])
 # Name
 with cols[0]:
     Firstname = data['Name'].split(' ')[0]
@@ -33,23 +33,27 @@ with cols[0]:
 
 # Photo
 with st.sidebar:
-    #uplodad photo
+    # uplodad photo
     uploaded_file = st.file_uploader("Upload a photo", type=["jpg", "png"])
     if uploaded_file:
         with cols[2]:
             st.image(uploaded_file, width=150)
+            st.caption("Photo")
 
 # Contact Details
+
+
 def create_contact_details(data):
     st.subheader("Contact Details")
     for key, value in data['Contact'].items():
         if key == "Birthdate":
             # Convert the Birthdate string from the JSON to a datetime.date object
             birthdate_date_object = datetime.strptime(value, "%d.%m.%Y").date()
-            
+
             # Use the date object to initialize the st.date_input widget
-            selected_date = st.date_input(key, value=birthdate_date_object, format="DD.MM.YYYY", key=f"Contact_{key}")
-            
+            selected_date = st.date_input(
+                key, value=birthdate_date_object, format="DD.MM.YYYY", key=f"Contact_{key}")
+
             # Convert the selected date back to the string format and update the data
             data['Contact'][key] = selected_date.strftime('%d.%m.%Y')
         elif key == "birthplace":
@@ -57,16 +61,18 @@ def create_contact_details(data):
             st.selectbox(key, value, key=f"Contact_{key}")
         else:
             st.text_input(key, value, key=f"Contact_{key}")
-            
+
+
 with st.expander("Contact Details", expanded=False):
     create_contact_details(data)
 # Summary
 st.subheader("Summary")
 st.text_area("Summary", data['Summary'], key="Summary")
 
+
 def display_education(edu_idx, education=None):
-    cols1 = st.columns([2,2.5,1])
-    cols2 = st.columns([1,1.5])
+    cols1 = st.columns([2, 2.5, 1])
+    cols2 = st.columns([1, 1.5])
     duration_key = f"Edu_Duration_{edu_idx}"
     institution_key = f"Edu_Institution_{edu_idx}"
     location_key = f"Edu_Location_{edu_idx}"
@@ -84,7 +90,7 @@ def display_education(edu_idx, education=None):
         if duration == '':
             start_date = date.today().strftime('%d.%m.%Y')
             end_date = date.today().strftime('%d.%m.%Y')
-            duration = start_date + '-' + end_date   
+            duration = start_date + '-' + end_date
         # the start date is the first part of the duration string, eg:my input is 04/2020 – 03/2023, auto fill the start date is 01/04/2020
         start_date = duration.split('-')[0].strip()
         # check if the start date has day, if not, add 01 to the start date
@@ -93,11 +99,12 @@ def display_education(edu_idx, education=None):
 
         start_date = datetime.strptime(str(start_date), "%d.%m.%Y").date()
         end_date = duration.split('-')[1].strip()
-        if len(end_date) == 7:   
+        if len(end_date) == 7:
             end_date = f"01.{end_date}"
-      
+
         end_date = datetime.strptime(end_date, "%d.%m.%Y").date()
-        duration = st.date_input("Duration", (start_date,end_date), format="DD.MM.YYYY", key=duration_key)
+        duration = st.date_input(
+            "Duration", (start_date, end_date), format="DD.MM.YYYY", key=duration_key)
 
     with cols1[1]:
         institution = st.text_input(
@@ -121,9 +128,11 @@ def display_education(edu_idx, education=None):
             'Focus': focus
         }
         return new_edu
-    
+
+
 def education_section(data):
     cols = st.columns([10, 1])
+
     with cols[0]:
         st.subheader("Education")
     with cols[1]:
@@ -143,7 +152,8 @@ def education_section(data):
         new_edu = display_education(edu_idx)
         data['Education'].append(new_edu)
         # st.divider()
-    
+
+
 with st.expander("Education", expanded=False):
     education_section(data)
 
@@ -153,25 +163,33 @@ with st.expander("Education", expanded=False):
 
 def display_work(work_idx, work=None):
     cols = st.columns(3)
+
+    work_duration_key = f"work_Duration_{work_idx}"
+    work_Role_key = f"work_Role_{work_idx}"
+    work_Location_key = f"work_Location_{work_idx}"
+    work_Company_key = f"work_Company_{work_idx}"
+    work_Responsibilities_key = f"Work_Responsibilities_{work_idx}"
+    work_Skills_key = f"Work_Skills_{work_idx}"
+
     with cols[0]:
 
         duration = st.text_input(
-            "Duration", work['Duration'] if work else "", key=f"work_Duration_{work_idx}")
+            "Duration", work['Duration'] if work else "", key=work_duration_key)
     with cols[1]:
 
         role = st.text_input(
-            "Role", work['Role'] if work else "", key=f"work_Role_{work_idx}")
+            "Role", work['Role'] if work else "", key=work_Role_key)
     with cols[2]:
 
         location = st.text_input(
-            "Location", work['Location'] if work else "", key=f"work_Location_{work_idx}")
+            "Location", work['Location'] if work else "", key=work_Location_key)
     company = st.text_input(
-        "Company", work['Company'] if work else "", key=f"work_Company_{work_idx}")
+        "Company", work['Company'] if work else "", key=work_Company_key)
 
     responsibilities = st.text_area("Responsibilities", '; '.join(work.get('Responsibilities', [])) if work else "",
-                                     help="Separate each responsibility with a semicolon '';''", key=f"Work_Responsibilities_{work_idx}")
+                                    help="Separate each responsibility with a semicolon '';''", key=work_Responsibilities_key)
     skills = st.text_area("Skills", ', '.join(work.get('Skills', [])) if work else "",
-                           help="Separate each skill with a comma '',''", key=f"Work_Skills_{work_idx}")
+                          help="Separate each skill with a comma '',''", key=work_Skills_key)
     st.divider()
     if not work:  # If it's a new project
         new_work = {
@@ -240,9 +258,9 @@ def display_project(proj_idx, proj=None):
         grade = st.text_input(
             "Grade", proj['Grade'] if proj else "", key=f"Proj_Grade_{proj_idx}")
     responsibilities = st.text_area("Responsibilities", '; '.join(proj.get('Responsibilities', [])) if proj else "",
-                                     help="Separate each responsibility with a semicolon '';''", key=f"Proj_Responsibilities_{proj_idx}")
+                                    help="Separate each responsibility with a semicolon '';''", key=f"Proj_Responsibilities_{proj_idx}")
     skills = st.text_area("Skills", ', '.join(proj.get('Skills', [])) if proj else "",
-                           help="Separate each skill with a comma '',''", key=f"Proj_Skills_{proj_idx}")
+                          help="Separate each skill with a comma '',''", key=f"Proj_Skills_{proj_idx}")
 
     if not proj:  # If it's a new project
         new_proj = {
@@ -303,24 +321,25 @@ with st.expander("Project Experience", expanded=False):
 
 # Define a list of common languages and proficiency levels
 all_languages = ['---',
-    'Afrikaans', 'Albanian', 'Arabic', 'Armenian', 'Basque', 'Bengali', 'Bulgarian',
-    'Catalan', 'Cambodian', 'Chinese (Mandarin)', 'Chinese (Cantonese)', 'Croatian', 'Czech', 'Danish',
-    'Dutch', 'English', 'Estonian', 'Fiji', 'Finnish', 'French', 'Georgian', 'German',
-    'Greek', 'Gujarati', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian',
-    'Irish', 'Italian', 'Japanese', 'Javanese', 'Korean', 'Latin', 'Latvian', 'Lithuanian',
-    'Macedonian', 'Malay', 'Malayalam', 'Maltese', 'Maori', 'Marathi', 'Mongolian',
-    'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Punjabi', 'Quechua',
-    'Romanian', 'Russian', 'Samoan', 'Serbian', 'Slovak', 'Slovenian', 'Spanish',
-    'Swahili', 'Swedish', 'Tamil', 'Tatar', 'Telugu', 'Thai', 'Tibetan', 'Tonga',
-    'Turkish', 'Ukrainian', 'Urdu', 'Uzbek', 'Vietnamese', 'Welsh', 'Xhosa'
-]
-proficiency_levels = ['---','A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Native']
+                 'Afrikaans', 'Albanian', 'Arabic', 'Armenian', 'Basque', 'Bengali', 'Bulgarian',
+                 'Catalan', 'Cambodian', 'Chinese (Mandarin)', 'Chinese (Cantonese)', 'Croatian', 'Czech', 'Danish',
+                 'Dutch', 'English', 'Estonian', 'Fiji', 'Finnish', 'French', 'Georgian', 'German',
+                 'Greek', 'Gujarati', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian',
+                 'Irish', 'Italian', 'Japanese', 'Javanese', 'Korean', 'Latin', 'Latvian', 'Lithuanian',
+                 'Macedonian', 'Malay', 'Malayalam', 'Maltese', 'Maori', 'Marathi', 'Mongolian',
+                 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Punjabi', 'Quechua',
+                 'Romanian', 'Russian', 'Samoan', 'Serbian', 'Slovak', 'Slovenian', 'Spanish',
+                 'Swahili', 'Swedish', 'Tamil', 'Tatar', 'Telugu', 'Thai', 'Tibetan', 'Tonga',
+                 'Turkish', 'Ukrainian', 'Urdu', 'Uzbek', 'Vietnamese', 'Welsh', 'Xhosa'
+                 ]
+proficiency_levels = ['---', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Native']
 
 modified_main_key = "Languages & IT Skills"
 if modified_main_key != "Languages & IT Skills":
     data[modified_main_key] = data.pop("Languages & IT Skills")
 
 # Languages & IT Skills
+
 
 def display_language(language_idx, language=None):
     cols = st.columns(2)
@@ -337,15 +356,19 @@ def display_language(language_idx, language=None):
         }
         return new_language
 
+
 def display_it_skill(skill_idx, skill=None):
     cols = st.columns([1, 3])
     with cols[0]:
-        skill_key = st.text_input("IT Skills", skill if skill else "", key=f"Skill_Key_{skill_idx}")
+        skill_key = st.text_input(
+            "IT Skills", skill if skill else "", key=f"Skill_Key_{skill_idx}")
     with cols[1]:
-        skill_value = st.text_input("-", ', '.join(skill[skill_key]) if skill and skill_key in skill else "", key=f"Skill_Value_{skill_idx}")
+        skill_value = st.text_input(
+            "-", ', '.join(skill[skill_key]) if skill and skill_key in skill else "", key=f"Skill_Value_{skill_idx}")
     # st.divider()
     if not skill:
-        new_skill = {skill_key: [value.strip() for value in skill_value.split(',')]}
+        new_skill = {skill_key: [value.strip()
+                                 for value in skill_value.split(',')]}
         return new_skill
 
 
@@ -358,19 +381,21 @@ def modify_languages(data, all_languages, proficiency_levels):
     with cols[1]:
         if st.button("➕", key="lang"):
             st.session_state.num_added_langs += 1
-          
+
     cols = st.columns(2)
     for k, v in list(data["Languages & IT Skills"]["Languages"].items()):
-        selected_language = cols[0].selectbox("Select Language", options=all_languages, 
-                                              index=all_languages.index(k) if k in all_languages else 0, 
+        selected_language = cols[0].selectbox("Select Language", options=all_languages,
+                                              index=all_languages.index(
+                                                  k) if k in all_languages else 0,
                                               key=f"Language_{k}")
-        selected_level = cols[1].selectbox("Select Proficiency", options=proficiency_levels, 
-                                           index=proficiency_levels.index(v) if v in proficiency_levels else 0, 
+        selected_level = cols[1].selectbox("Select Proficiency", options=proficiency_levels,
+                                           index=proficiency_levels.index(
+                                               v) if v in proficiency_levels else 0,
                                            key=f"Proficiency_{k}")
         if selected_language != k:
             del data["Languages & IT Skills"]["Languages"][k]
         data["Languages & IT Skills"]["Languages"][selected_language] = selected_level
-        
+
     for lang_idx in range(st.session_state.num_added_langs):
         new_language = display_language(lang_idx)
         data["Languages & IT Skills"]["Languages"].update(new_language)
@@ -384,32 +409,37 @@ def modify_it_skills(data):
     with cols[1]:
         if st.button("➕", key="it_skill"):
             st.session_state.num_added_skills += 1
-          
+
     for key, value in list(data["Languages & IT Skills"].items()):
         if key != "Languages":
             cols = st.columns([1, 3])
             modified_key = cols[0].text_input("IT Skills", key)
             if isinstance(value, list):
                 modified_value = cols[1].text_input('-', ', '.join(value))
-                data['Languages & IT Skills'][modified_key] = modified_value.split(', ')
+                data['Languages & IT Skills'][modified_key] = modified_value.split(
+                    ', ')
     for idx in range(st.session_state.num_added_skills):
-                        display_it_skill(idx)
+        display_it_skill(idx)
+
 
 def modify_languages_and_skills_optimized(data, all_languages, proficiency_levels):
     """Optimized modify_languages_and_skills function."""
     modify_it_skills(data)
     modify_languages(data, all_languages, proficiency_levels)
 
+
 with st.expander("Languages & IT Skills", expanded=False):
-    modify_languages_and_skills_optimized(data, all_languages, proficiency_levels)
-    
-    
+    modify_languages_and_skills_optimized(
+        data, all_languages, proficiency_levels)
+
+
 # Hobbies
 def display_hobbies(data):
     st.subheader("Hobbies")
     hobbies = ', '.join(data['Hobbies'])
     modified_hobbies = st.text_input("-", hobbies)
     data['Hobbies'] = [hobby.strip() for hobby in modified_hobbies.split(',')]
+
 
 with st.expander("Hobbies", expanded=False):
     display_hobbies(data)
