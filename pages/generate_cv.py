@@ -4,34 +4,54 @@ import json
 from datetime import date
 import canvas
 from datetime import datetime
+def load_json_data(filename: str):
+    """Load JSON data from a given filename."""
+    with open(filename, 'r') as file:
+        return json.load(file)
 
-# Load the JSON data
-with open('resume_properties.json', 'r') as file:
-    data = json.load(file)
-
+data = load_json_data('resume_properties.json')
 openai_api_key = st.secrets['OPENAI_API_KEY']
+all_languages = load_json_data('languages_list.json')
+
+
+
+
 
 # Display data using Streamlit widgets
 st.title("Resume Viewer")
 
-if 'num_added_projects' not in st.session_state:
-    st.session_state.num_added_projects = 0
-if 'num_added_works' not in st.session_state:
-    st.session_state.num_added_works = 0
-if 'num_added_langs' not in st.session_state:
-    st.session_state.num_added_langs = 0
-if 'num_added_educations' not in st.session_state:
-    st.session_state.num_added_educations = 0
-if 'num_added_skills' not in st.session_state:
-    st.session_state.num_added_skills = 0
+session_state_keys = [
+    'num_added_projects', 'num_added_works', 'num_added_langs',
+    'num_added_educations', 'num_added_skills'
+]
+def init_session_state(keys, default_value=0):
+    for key in keys:
+        if key not in st.session_state:
+            st.session_state[key] = default_value
+init_session_state(session_state_keys)
+
+def split_name(full_name: str):
+    """
+    Split a full name into first and last names.
+    
+    Args:
+    - full_name (str): The full name to be split.
+    
+    Returns:
+    - tuple: A tuple containing the first and last names.
+    """
+    parts = full_name.split(' ')
+    first_name = parts[0]
+    last_name = parts[1] if len(parts) > 1 else ""
+    return first_name, last_name
 
 cols = st.columns([2, 1, 2])
 # Name
 with cols[0]:
-    Firstname = data['Name'].split(' ')[0]
-    Lastname = data['Name'].split(' ')[1]
+    Firstname, Lastname = split_name(data['Name'])
     st.text_input("First Name", Firstname, key="FirstName")
     st.text_input("Last Name", Lastname, key="LastName")
+
 
 # Photo
 with st.sidebar:
@@ -88,25 +108,47 @@ with st.expander("Contact Details", expanded=False):
 st.subheader("Summary")
 st.text_area("Summary", data['Summary'], key="Summary")
 
-def duration_to_date(duration,duration_key_name):
-    if duration == '':
-        start_date = date.today().strftime('%d.%m.%Y')
-        end_date = date.today().strftime('%d.%m.%Y')
-        duration = start_date + '-' + end_date
-    # the start date is the first part of the duration string, eg:my input is 04/2020 – 03/2023, auto fill the start date is 01/04/2020
-    start_date = duration.split('-')[0].strip()
-    # check if the start date has day, if not, add 01 to the start date
-    if len(start_date) == 7:
-        start_date = f"01.{start_date}"
+# def duration_to_date(duration,duration_key_name):
+#     if duration == '':
+#         start_date = date.today().strftime('%d.%m.%Y')
+#         end_date = date.today().strftime('%d.%m.%Y')
+#         duration = start_date + '-' + end_date
+#     # the start date is the first part of the duration string, eg:my input is 04/2020 – 03/2023, auto fill the start date is 01/04/2020
+#     start_date = duration.split('-')[0].strip()
+#     # check if the start date has day, if not, add 01 to the start date
+#     if len(start_date) == 7:
+#         start_date = f"01.{start_date}"
 
-    start_date = datetime.strptime(str(start_date), "%d.%m.%Y").date()
-    end_date = duration.split('-')[1].strip()
-    if len(end_date) == 7:
-        end_date = f"01.{end_date}"
+#     start_date = datetime.strptime(str(start_date), "%d.%m.%Y").date()
+#     end_date = duration.split('-')[1].strip()
+#     if len(end_date) == 7:
+#         end_date = f"01.{end_date}"
 
-    end_date = datetime.strptime(end_date, "%d.%m.%Y").date()
-    duration = st.date_input(
-        "Duration", (start_date, end_date), format="DD.MM.YYYY", key=duration_key_name)
+#     end_date = datetime.strptime(end_date, "%d.%m.%Y").date()
+#     duration = st.date_input(
+#         "Duration", (start_date, end_date), format="DD.MM.YYYY", key=duration_key_name)
+def get_start_end_dates_from_duration(duration: str):
+    # Extract start and end dates
+    start_date_str, _, end_date_str = duration.partition('-')
+    start_date_str = start_date_str.strip()
+    end_date_str = end_date_str.strip()
+
+    # Add day part if missing
+    start_date_str = start_date_str if len(start_date_str) == 10 else f"01.{start_date_str}"
+    end_date_str = end_date_str if len(end_date_str) == 10 else f"01.{end_date_str}"
+
+    # Convert to date objects
+    start_date = datetime.strptime(start_date_str, "%d.%m.%Y").date()
+    end_date = datetime.strptime(end_date_str, "%d.%m.%Y").date()
+    
+    return start_date, end_date
+
+def duration_to_date(duration: str, duration_key_name: str):
+    if not duration:
+        start_date, end_date = date.today(), date.today()
+    else:
+        start_date, end_date = get_start_end_dates_from_duration(duration)
+    st.date_input("Duration", (start_date, end_date), format="DD.MM.YYYY", key=duration_key_name)
 
 def display_education(edu_idx, education=None):
     cols1 = st.columns([2, 2.5, 1])
@@ -363,19 +405,7 @@ with st.expander("Project Experience", expanded=False):
     project_experience_section(data)
 
 
-# Define a list of common languages and proficiency levels
-all_languages = ['---',
-                 'Afrikaans', 'Albanian', 'Arabic', 'Armenian', 'Basque', 'Bengali', 'Bulgarian',
-                 'Catalan', 'Cambodian', 'Chinese (Mandarin)', 'Chinese (Cantonese)', 'Croatian', 'Czech', 'Danish',
-                 'Dutch', 'English', 'Estonian', 'Fiji', 'Finnish', 'French', 'Georgian', 'German',
-                 'Greek', 'Gujarati', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian',
-                 'Irish', 'Italian', 'Japanese', 'Javanese', 'Korean', 'Latin', 'Latvian', 'Lithuanian',
-                 'Macedonian', 'Malay', 'Malayalam', 'Maltese', 'Maori', 'Marathi', 'Mongolian',
-                 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Punjabi', 'Quechua',
-                 'Romanian', 'Russian', 'Samoan', 'Serbian', 'Slovak', 'Slovenian', 'Spanish',
-                 'Swahili', 'Swedish', 'Tamil', 'Tatar', 'Telugu', 'Thai', 'Tibetan', 'Tonga',
-                 'Turkish', 'Ukrainian', 'Urdu', 'Uzbek', 'Vietnamese', 'Welsh', 'Xhosa'
-                 ]
+
 proficiency_levels = ['---', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Native']
 
 modified_main_key = "Languages & IT Skills"
@@ -383,9 +413,9 @@ if modified_main_key != "Languages & IT Skills":
     data[modified_main_key] = data.pop("Languages & IT Skills")
 
 # Languages & IT Skills
-
-
 def display_language(language_idx, language=None):
+
+        
     cols = st.columns(2)
     with cols[0]:
         selected_language = st.selectbox("Select Language", options=all_languages, index=all_languages.index(
