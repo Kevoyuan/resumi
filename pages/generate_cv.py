@@ -40,17 +40,18 @@ def split_name(full_name: str):
     Returns:
     - tuple: A tuple containing the first and last names.
     """
-    parts = full_name.split(' ')
+    parts = full_name.split()
     first_name = parts[0]
-    last_name = parts[1] if len(parts) > 1 else ""
+    last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
     return first_name, last_name
+
 
 cols = st.columns([2, 1, 2])
 # Name
 with cols[0]:
-    Firstname, Lastname = split_name(data['Name'])
-    st.text_input("First Name", Firstname, key="FirstName")
-    st.text_input("Last Name", Lastname, key="LastName")
+    first_name, last_name = split_name(data['Name'])
+    st.text_input("First Name", first_name, key="FirstName")
+    st.text_input("Last Name", last_name, key="LastName")
 
 
 # Photo
