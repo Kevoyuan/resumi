@@ -4,3 +4,5 @@ PyPDF2
 openai
 langchain
 pdfkit
+
+streamlit-drawable-canvas
