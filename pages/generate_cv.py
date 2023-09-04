@@ -83,25 +83,24 @@ def suggest_modification(text, openai_api_key=openai_api_key):
     
 
 # Contact Details
+def handle_birthdate(key, value, data):
+    birthdate_date_object = datetime.strptime(value, "%d.%m.%Y").date()
+    selected_date = st.date_input(
+        key, value=birthdate_date_object, format="DD.MM.YYYY", key=f"Contact_{key}")
+    data['Contact'][key] = selected_date.strftime('%d.%m.%Y')
+
+def handle_birthplace(key, value):
+    st.selectbox(key, value, key=f"Contact_{key}")
+
 def create_contact_details(data):
     st.subheader("Contact Details")
     for key, value in data['Contact'].items():
         if key == "Birthdate":
-            # Convert the Birthdate string from the JSON to a datetime.date object
-            birthdate_date_object = datetime.strptime(value, "%d.%m.%Y").date()
-
-            # Use the date object to initialize the st.date_input widget
-            selected_date = st.date_input(
-                key, value=birthdate_date_object, format="DD.MM.YYYY", key=f"Contact_{key}")
-
-            # Convert the selected date back to the string format and update the data
-            data['Contact'][key] = selected_date.strftime('%d.%m.%Y')
+            handle_birthdate(key, value, data)
         elif key == "birthplace":
-            # use select_box to select from a list of countries
-            st.selectbox(key, value, key=f"Contact_{key}")
+            handle_birthplace(key, value)
         else:
             st.text_input(key, value, key=f"Contact_{key}")
-
 
 with st.expander("Contact Details", expanded=False):
     create_contact_details(data)
@@ -109,25 +108,6 @@ with st.expander("Contact Details", expanded=False):
 st.subheader("Summary")
 st.text_area("Summary", data['Summary'], key="Summary")
 
-# def duration_to_date(duration,duration_key_name):
-#     if duration == '':
-#         start_date = date.today().strftime('%d.%m.%Y')
-#         end_date = date.today().strftime('%d.%m.%Y')
-#         duration = start_date + '-' + end_date
-#     # the start date is the first part of the duration string, eg:my input is 04/2020 – 03/2023, auto fill the start date is 01/04/2020
-#     start_date = duration.split('-')[0].strip()
-#     # check if the start date has day, if not, add 01 to the start date
-#     if len(start_date) == 7:
-#         start_date = f"01.{start_date}"
-
-#     start_date = datetime.strptime(str(start_date), "%d.%m.%Y").date()
-#     end_date = duration.split('-')[1].strip()
-#     if len(end_date) == 7:
-#         end_date = f"01.{end_date}"
-
-#     end_date = datetime.strptime(end_date, "%d.%m.%Y").date()
-#     duration = st.date_input(
-#         "Duration", (start_date, end_date), format="DD.MM.YYYY", key=duration_key_name)
 def get_start_end_dates_from_duration(duration: str):
     # Extract start and end dates
     start_date_str, _, end_date_str = duration.partition('-')
