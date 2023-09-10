@@ -17,30 +17,55 @@ openai_api_key = st.secrets['OPENAI_API_KEY']
 
 def extract_properties_from_resume(resume_text,openai_api_key=openai_api_key):
     # Modified prompt for the OpenAI API
+    # prompt = '''
+    # Please extract the following resume properties and structure into a JSON format. For the 'Duration' field, use the format 'DD.MM.YYYY-DD.MM.YYYY.' If the day is missing, please ensure that DD=01 (e.g., 04/2020 or 2020.04 should be formatted as 01.04.2020).
+
+    # {
+    #     "Name": "",
+    #     "Contact": {"Email": "", "GitHub": "", "Birthdate": "", "Birthplace": "", "LinkedIn": "", "Address": "", "Phone": ""},
+    #     "Summary": "",
+    #     "Education": [{"Duration": "", "Institution": "", "Location": "", "Degree": "", "Focus": ""}],
+    #     "Work Experience": [{"Duration": "", "Role": "", "Location": "", "Company": "", "Responsibilities": [""], "Skills": [""]}],
+    #     "Project Experience": [{"Duration": "", "Title": "", "Location": "", "Institution": "", "Topic": "", "Grade": "", "Responsibilities": [""], "Skills": [""]}],
+    #     "Languages & IT Skills": {},
+    #     "Hobbies": [""],
+    #     "Location": "",
+    #     "Date": ""
+    # }
+
+    # For mapping the user's language proficiency to the preset levels:
+    # - Mother language can be mapped to Native.
+    # - Terms like "fluent" can be mapped to C1 or C2, depending on the depth of fluency.
+    # - Basic knowledge can be mapped to A1 or A2.
+    # - Intermediate proficiency can be mapped to B1 or B2.
+
+    # Please provide the required information based on the resume example you have. When providing durations, use the format "MM.YYYY - MM.YYYY". If no day is included, make day DD=01 (e.g., 04/2020 = 01.04.2020). Include details such as Name, Contact, Summary, Education, Work Experience, Project Experience, Languages & IT Skills, Hobbies, Location, and Date.
+
+
+    # '''
     prompt = '''
-    Extract resume properties and structure in JSON. For any duration, use format="DD.MM.YYYY",if no day include, save DD=01, eg: 04/2020 = 01.04.2020):
-    {
-        "Name": "",
-        "Contact": {"Email": "", "GitHub": "", "Birthdate": "", "Birthplace": "", "LinkedIn": "", "Address": "", "Phone": ""},
-        "Summary": "",
-        "Education": [{"Duration": "", "Institution": "", "Location": "", "Degree": "", "Focus": ""}],
-        "Work Experience": [{"Duration": "", "Role": "", "Location": "", "Company": "", "Responsibilities": [""], "Skills": [""]}],
-        "Project Experience": [{"Duration": "", "Title": "", "Location": "", "Institution": "", "Topic": "", "Grade": "", "Responsibilities": [""], "Skills": [""]}],
-        "Languages & IT Skills": Capture any IT skill category eg: technical skills, program languagues (as keys) with its respective skills (as sub-keys). For "Languages": {
-            "Language": "Proficiency_Level"
-        },
-        "Hobbies": [""],
-        "Location": "",
-        "Date": ""
-    }
-    For mapping the user's language proficiency to the preset levels:
-    Mother language can be mapped to Native.
-    Terms like fluent can be mapped to C1 or C2 depending on the depth of fluency.
-    Basic knowledge can be mapped to A1 or A2.
-    Intermediate proficiency can be mapped to B1 or B2.
+        Please extract the following resume properties and structure into a JSON format. Ensure that the information is organized in the specified order:
 
+    1. "Name"
+    2. "Contact" (including Email, GitHub, LinkedIn, Address, and Phone)
+    3. "Summary"
+    4. "Education" (each with "Duration," "Institution," "Location," "Degree," and "Focus")
+    5. "Work Experience" (each with "Duration," "Role," "Location," "Company," "Responsibilities," and "Skills")
+    6. "Project Experience" (each with "Duration," "Title," "Location," "Institution," "Topic," "Grade," "Responsibilities," and "Skills")
+    7. "Languages & IT Skills"
+    8. "Hobbies"
+    9. "Location"
+    10. "Date"
+
+    For mapping language proficiency levels, follow these guidelines:
+    - Mother language can be mapped to Native.
+    - Terms like "fluent" can be mapped to C1 or C2, depending on the depth of fluency.
+    - Basic knowledge can be mapped to A1 or A2.
+    - Intermediate proficiency can be mapped to B1 or B2.
+
+    Please provide the required information based on the resume example you have. When providing durations, use the format "DD.MM.YYYY-DD.MM.YYYY." If no day is included, make day DD=01 (e.g., 04/2020 or 2020.04 should be formatted as 01.04.2020). Extract skills from relevant sections, and ensure that all extracted information is accurate and well-structured."
     '''
-
+    
     if not openai_api_key:
         st.info("Please add your OpenAI API key to continue.")
         st.stop()
@@ -48,13 +73,26 @@ def extract_properties_from_resume(resume_text,openai_api_key=openai_api_key):
     openai.api_key = openai_api_key
     
     # Use the OpenAI API to process the resume
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=f"{prompt}\n\n{resume_text}",
+    # response = openai.Completion.create(
+    #     engine="gpt-3.5-turbo",
+    #     prompt=f"{prompt}\n\n{resume_text}",
+    #     max_tokens=2000,
+    # )
+    # # Extracted properties
+    # properties = response.choices[0].text.strip()
+    # # Convert the properties to a dictionary
+    # properties_dict = json.loads(properties)
+    # Use the OpenAI API to process the resume
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": f"{prompt}\n\n{resume_text}"},
+        ],
         max_tokens=2000,
     )
     # Extracted properties
-    properties = response.choices[0].text.strip()
+    properties = response["choices"][0]["message"]["content"].strip()
     # Convert the properties to a dictionary
     properties_dict = json.loads(properties)
   
