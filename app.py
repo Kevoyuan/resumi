@@ -4,6 +4,7 @@ import streamlit as st
 import docx
 from PyPDF2 import PdfFileReader
 import json
+import re
 # DESIGN changes for Streamlit UI/UX
 
 
@@ -14,6 +15,12 @@ import json
 #     "[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)"
 #     "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)"
 openai_api_key = st.secrets['OPENAI_API_KEY']
+# Define a regular expression pattern to match and reformat dates
+DATE_PATTERNS = [
+    r'(\d{2})\.(\d{2,4})\s*-\s*(\d{2})\.(\d{2,4})',     # Matches '04.20 -08.20' and '04.2020 -08.2020'
+    r'(\d{2})/(\d{2,4})\s*-\s*(\d{2})/(\d{2,4})'       # Matches '04/20 - 08/20' and '04/2020 -08/2020'
+]
+
 
 def extract_properties_from_resume(resume_text,openai_api_key=openai_api_key):
     # Modified prompt for the OpenAI API
@@ -45,25 +52,26 @@ def extract_properties_from_resume(resume_text,openai_api_key=openai_api_key):
     # '''
     prompt = '''
         Please extract the following resume properties and structure into a JSON format. Ensure that the information is organized in the specified order:
-
-    1. "Name"
-    2. "Contact" (including Email, GitHub, LinkedIn, Address, and Phone)
-    3. "Summary"
-    4. "Education" (each with "Duration," "Institution," "Location," "Degree," and "Focus")
-    5. "Work Experience" (each with "Duration," "Role," "Location," "Company," "Responsibilities," and "Skills")
-    6. "Project Experience" (each with "Duration," "Title," "Location," "Institution," "Topic," "Grade," "Responsibilities," and "Skills")
-    7. "Languages & IT Skills"
-    8. "Hobbies"
-    9. "Location"
-    10. "Date"
-
+    {
+        "Name": "",
+        "Contact": {"Email": "", "GitHub": "", "Birthdate": "", "Birthplace": "", "LinkedIn": "", "Address": "", "Phone": ""},
+        "Summary": "",
+        "Education": [{"Duration": "", "Institution": "", "Location": "", "Degree": "", "Focus": ""}],
+        "Work Experience": [{"Duration": "", "Role": "", "Location": "", "Company": "", "Responsibilities": [""], "Skills": [""]}],
+        "Project Experience": [{"Duration": "", "Title": "", "Location": "", "Institution": "", "Topic": "", "Grade": "", "Responsibilities": [""], "Skills": [""]}],
+        "IT Skills": {},
+        "Languages": {},
+        "Hobbies": [""],
+        "Location": "",
+        "Date": ""
+    }
     For mapping language proficiency levels, follow these guidelines:
     - Mother language can be mapped to Native.
     - Terms like "fluent" can be mapped to C1 or C2, depending on the depth of fluency.
     - Basic knowledge can be mapped to A1 or A2.
     - Intermediate proficiency can be mapped to B1 or B2.
 
-    Please provide the required information based on the resume example you have. When providing durations, use the format "DD.MM.YYYY-DD.MM.YYYY." If no day is included, make day DD=01 (e.g., 04/2020 or 2020.04 should be formatted as 01.04.2020). Extract skills from relevant sections, and ensure that all extracted information is accurate and well-structured."
+    Please provide the required information based on the resume example you have. When providing durations, use the format "MM.YYYY - MM.YYYY" or "MM.YYYY - MM.YYYY" (e.g., 04/2020-03/2023 or 2020.05 - 2023.03 should be formatted as 04.2020 - 03.2023). Extract skills from relevant sections, and ensure that all extracted information is accurate and well-structured.
     '''
     
     if not openai_api_key:
@@ -84,7 +92,7 @@ def extract_properties_from_resume(resume_text,openai_api_key=openai_api_key):
     # properties_dict = json.loads(properties)
     # Use the OpenAI API to process the resume
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-3.5-turbo-16k",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": f"{prompt}\n\n{resume_text}"},
@@ -106,43 +114,14 @@ def extract_properties_from_resume(resume_text,openai_api_key=openai_api_key):
     return properties_dict
 
 
-
-def read_pdf(file):
-    pdf = PdfFileReader(file)
-    text = ""
-    for page in pdf.pages:
-        text += page.extract_text()
-    return text
-
-def read_docx(file):
-    doc = docx.Document(file)
-    text = ""
-    for paragraph in doc.paragraphs:
-        text += paragraph.text + "\n"
-    return text
-
 def main_resume_extractor():
     st.title("Resume Refinement")
 
-    # uploaded_file = st.file_uploader("Upload a Word or PDF file", type=["pdf", "docx"])
-
-    # if uploaded_file:
-    #     pass
-        # if uploaded_file.type == "application/pdf":
-        #     resume_text = read_pdf(uploaded_file)
-        # elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        #     resume_text = read_docx(uploaded_file)
-        # properties = extract_properties_from_resume(resume_text)
-        # st.json(properties)
-        
-        # # Save the properties to a JSON file
-        # with open('resume_properties.json', 'w') as json_file:
-        #     json.dump(properties, json_file, indent=4)
-        # st.success("Properties saved to resume_properties.json")
-    # else:
     resume_text = st.text_area("Paste your resume text here:")
     if st.button("Extract Properties"):
         properties = extract_properties_from_resume(resume_text)
+       
+        
         st.json(properties)
         
         # Save the properties to a JSON file
